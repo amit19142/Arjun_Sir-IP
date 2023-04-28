@@ -1,33 +1,45 @@
-import pandas
-from flask_sqlalchemy import SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/codingthunder'
-db = SQLAlchemy(app)
-import pandas
-from flask_sqlalchemy import SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/codingthunder'
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['UPLOAD_FOLDER'] = r"C:\Users\AMIT\OneDrive\Desktop\Arjun_Sir\Upload"
-db = SQLAlchemy(app)
+import pandas as pd
+from sqlalchemy import create_engine
+import os
+import pandas as pd
+import numpy as np
+from openpyxl import load_workbook
+from datetime import datetime
+import datetime as dt
+import os
 
-class Forecast(db.Model):
-    sno = db.Column(db.Integer, primary_key=True)
-    Hotel = db.Column(db.String(80), nullable=False)
-    Month = db.Column(db.String(12), nullable=False)
-    Quarter = db.Column(db.String(120), nullable=False)
-    Occupancy_Date = db.Column(db.String(12), nullable=True)
-    DOW = db.Column(db.String(20), nullable=False)
-    RIS_FIT = db.Column(db.Integer, nullable=False)
-    RS_Group = db.Column(db.Integer, nullable=False)
-    RS_Comp_H_Use = db.Column(db.Integer, nullable=False)
-    Total_Rooms_Sold = db.Column(db.Integer, nullable=False)
-    FC_FIT = db.Column(db.Integer, nullable=False)
-    FC_Group = db.Column(db.Integer, nullable=False)
-    FC_Comp_H_Use = db.Column(db.Integer, nullable=False)
-    Total_Forecast = db.Column(db.Integer, nullable=False)
+# create an SQLAlchemy engine
+engine = create_engine('sqlite:///mydatabase.db', echo=True)
 
-db = SQLAlchemy(app)
-entry = Forecast(name=name, phone_num=phone,
-                         msg=message, date=datetime.now(), email=email)
-db.session.add(entry)
-db.session.commit()
+# read the Excel file into a pandas dataframe
+path = r"C:\Users\AMIT\OneDrive\Desktop\Arjun_Sir\Upload"
+# path = "/content/drive/My Drive/History and Forecast"
+
+columns = ["Actual Date", "Business Date", "Rooms Sold", "Rooms for Sale", "Arrival Rooms", "Compliment Rooms", "House Use", "Hold", "Individual Confirm", "Individual Tentative", "Group Confirm", "Group Tentative", "Occupancy %", "Room Revenue", "ARR", "Inclusion Revenue", "Departure Rooms", "OOO Rooms", "Pax", "Individual Revenue", "Individual ARR", "Confirmed Group Revenue", "Confirmed Group ARR", "Tentative Group Revenue", "Tentative Group ARR", "Total Room Inventory"]
+df = pd.DataFrame(columns=columns)
+
+for filename in os.listdir(path):
+  if filename.endswith(".xlsx"):
+    filepath = os.path.join(path, filename)
+    wb = load_workbook(filename=filepath, read_only=True)
+    ws = wb.active
+
+    actual_date_str = ws.cell(row=8, column=1).value
+    actual_date = actual_date_str.strftime("%Y-%m-%d")
+
+    for row in ws.iter_rows(min_row=8, max_row=ws.max_row, min_col=1, max_col=26, values_only=True):
+      if isinstance(row[0], (datetime, pd.Timestamp)):
+        business_date = row[0].strftime("%Y-%m-%d")
+        row_dict = {"Actual Date": actual_date, "Business Date": business_date}
+
+        # Add the data from columns C to Z to the dictionary
+        for i in range(2, 26):
+          row_dict[columns[i]] = row[i]
+
+        # Append the row data to the dataframe
+        df = pd.concat([df, pd.DataFrame([row_dict])], ignore_index=True)
+
+# Print the resulting dataframe
+print(df)
+# write the dataframe to the SQLAlchemy database
+df.to_sql('mytable', con=engine, if_exists='replace', index=False)

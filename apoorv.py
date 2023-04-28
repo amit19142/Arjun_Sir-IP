@@ -51,6 +51,10 @@ def perform(excel_file1, excel_sheet1, excel_sheet2):
                 excel_sheet1.cell(row=i+1, column=8).value = rs_fit
                 excel_sheet1.cell(row=i+1, column=9).value = rs_groups
                 excel_sheet1.cell(row=i+1, column=10).value = rs_CH
+                ## 
+                excel_sheet1.cell(row=i+1, column=12).value = rs_fit
+                excel_sheet1.cell(row=i+1, column=13).value = rs_groups
+                excel_sheet1.cell(row=i+1, column=14).value = rs_CH
             # else:
             #     print(f"The given date array does not contains the date {occupancy_date[i]}")
    

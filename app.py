@@ -12,6 +12,9 @@ import os
 from werkzeug.utils import secure_filename
 import pandas
 from flask_sqlalchemy import SQLAlchemy
+import webview
+
+
 
 app = Flask(__name__)
 
@@ -62,5 +65,9 @@ def download():
     return send_file(file_path, as_attachment=True)
 
 
+webview.create_window("Flask to exe",app)
+
 if __name__ == "__main__":
     app.run(debug=True)
+    # webview.start()
+
